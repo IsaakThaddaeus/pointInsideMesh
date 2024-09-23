@@ -92,7 +92,7 @@ public static class pointInsideMesh
 
 
     // Computes the closest point on the surface of the mesh from a point located inside the mesh 
-    public static Vector3 closestPointOnMesh(GameObject meshObject, Vector3 point)
+    public static Vector3 closestPointOnMesh(GameObject meshObject, Vector3 point, out Vector3 closestNormal)
     {
         Mesh mesh = meshObject.GetComponent<MeshFilter>().mesh;
 
@@ -101,6 +101,7 @@ public static class pointInsideMesh
         Matrix4x4 localToWorld = meshObject.transform.localToWorldMatrix;
 
         Vector3 closestPoint = Vector3.zero;
+        closestNormal = Vector3.zero;
 
         for (int i = 0; i < triangles.Length; i += 3)
         {
@@ -122,6 +123,7 @@ public static class pointInsideMesh
             {
                 if(closestPoint == Vector3.zero || Vector3.Distance(point, point + rayDirection * t) < Vector3.Distance(point, closestPoint)){
                     closestPoint = point + rayDirection * t;
+                    closestNormal = rayDirection.normalized;
                 }
             }
         }
