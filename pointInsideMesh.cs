@@ -12,7 +12,7 @@ public static class pointInsideMesh
 
         int numberOfIntersections = 0;
 
-        Vector3 rayDirection = new Vector3(1f, 0f, 0f);
+        Vector3 rayDirection = new Vector3(1f, 0.1f, 0.3f);
         Matrix4x4 localToWorld = meshObject.transform.localToWorldMatrix;
 
         for (int i = 0; i < triangles.Length; i += 3)
@@ -123,6 +123,59 @@ public static class pointInsideMesh
             {
                 if(closestPoint == Vector3.zero || Vector3.Distance(point, point + rayDirection * t) < Vector3.Distance(point, closestPoint)){
                     closestPoint = point + rayDirection * t;
+                    closestNormal = rayDirection.normalized;
+                }
+            }
+
+        }
+
+        return closestPoint;
+    }
+
+    // Computes the closest point on the surface of the mesh
+    public static Vector3 closestPointOnMeshBoth(GameObject meshObject, Vector3 point, out Vector3 closestNormal)
+    {
+        Mesh mesh = meshObject.GetComponent<MeshFilter>().mesh;
+
+        Vector3[] vertices = mesh.vertices;
+        int[] triangles = mesh.triangles;
+        Matrix4x4 localToWorld = meshObject.transform.localToWorldMatrix;
+
+        Vector3 closestPoint = Vector3.zero;
+        closestNormal = Vector3.zero;
+
+        for (int i = 0; i < triangles.Length; i += 3)
+        {
+            Vector3 v0 = vertices[triangles[i]];
+            Vector3 v1 = vertices[triangles[i + 1]];
+            Vector3 v2 = vertices[triangles[i + 2]];
+
+            v0 = localToWorld.MultiplyPoint3x4(v0);
+            v1 = localToWorld.MultiplyPoint3x4(v1);
+            v2 = localToWorld.MultiplyPoint3x4(v2);
+
+
+            Vector3 edge1 = v1 - v0;
+            Vector3 edge2 = v2 - v0;
+
+            Vector3 rayDirection = Vector3.Cross(edge1, edge2);
+            float t;
+
+            if (IntersectRayTriangle(point, rayDirection, v0, v1, v2, out t))
+            {
+                if (closestPoint == Vector3.zero || Vector3.Distance(point, point + rayDirection * t) < Vector3.Distance(point, closestPoint))
+                {
+                    closestPoint = point + rayDirection * t;
+                    closestNormal = rayDirection.normalized;
+                }
+            }
+
+
+            if (IntersectRayTriangle(point, -rayDirection, v0, v1, v2, out t))
+            {
+                if (closestPoint == Vector3.zero || Vector3.Distance(point, point + rayDirection * t) < Vector3.Distance(point, closestPoint))
+                {
+                    closestPoint = point - rayDirection * t;
                     closestNormal = rayDirection.normalized;
                 }
             }
